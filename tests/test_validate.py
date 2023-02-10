@@ -10,7 +10,7 @@ def test_valid():
     }
 
     output = list(convert_to_github(input, 'terraform'))
-    assert output == []
+    assert not output
 
 
 def test_invalid():

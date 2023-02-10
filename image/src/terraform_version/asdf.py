@@ -16,9 +16,9 @@ def parse_asdf(tool_versions: str, versions: Iterable[Version]) -> Version:
 
     for line in tool_versions.splitlines():
         if match := re.match(r'^\s*terraform\s+([^\s#]+)', line.strip()):
-            if match.group(1) == 'latest':
+            if match[1] == 'latest':
                 return latest_non_prerelease_version(v for v in versions if not v.pre_release)
-            return Version(match.group(1))
+            return Version(match[1])
 
     raise Exception('No version for terraform found in .tool-versions')
 

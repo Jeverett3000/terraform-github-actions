@@ -33,7 +33,7 @@ def read_backend_config_vars(init_inputs: InitInputs) -> dict[str, str]:
 
     for backend_var in init_inputs.get('INPUT_BACKEND_CONFIG', '').replace(',', '\n').splitlines():
         if match := re.match(r'(.*)\s*=\s*(.*)', backend_var):
-            config[match.group(1)] = match.group(2)
+            config[match[1]] = match[2]
 
     return config
 
@@ -68,16 +68,22 @@ def get_backend_constraints(module: TerraformModule, backend_config_vars: dict[s
         if config_var not in backend_constraints[backend_type]['config_variables']:
             continue
 
-        for constraint in backend_constraints[backend_type]['config_variables'][config_var]:
-            constraints.append(Constraint(constraint))
-
+        constraints.extend(
+            Constraint(constraint)
+            for constraint in backend_constraints[backend_type][
+                'config_variables'
+            ][config_var]
+        )
     for env_var in os.environ:
         if env_var not in backend_constraints[backend_type]['environment_variables']:
             continue
 
-        for constraint in backend_constraints[backend_type]['environment_variables'][env_var]:
-            constraints.append(Constraint(constraint))
-
+        constraints.extend(
+            Constraint(constraint)
+            for constraint in backend_constraints[backend_type][
+                'environment_variables'
+            ][env_var]
+        )
     return constraints
 
 
@@ -148,7 +154,7 @@ def try_init(terraform: Version, init_args: list[str], workspace: str, backend_t
 
     if result.returncode != 0:
         if match := re.search(rb'state snapshot was created by Terraform v(.*),', result.stderr):
-            return Version(match.group(1).decode())
+            return Version(match[1].decode())
         elif b'does not support state version 4' in result.stderr:
             return Constraint('>=0.12.0')
         elif b'Failed to select workspace' in result.stderr:

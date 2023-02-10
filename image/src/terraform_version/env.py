@@ -15,10 +15,11 @@ def try_read_env(actions_env: ActionsEnv, versions: Iterable[Version]) -> Option
 
     try:
         valid_versions = list(apply_constraints(versions, [Constraint(c) for c in constraint.split(',')]))
-        if not valid_versions:
-            return None
-        return latest_non_prerelease_version(valid_versions)
-
+        return (
+            latest_non_prerelease_version(valid_versions)
+            if valid_versions
+            else None
+        )
     except Exception as exception:
         debug(str(exception))
 

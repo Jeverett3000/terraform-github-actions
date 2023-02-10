@@ -131,7 +131,7 @@ def new_workspace(backend_config: BackendConfig, workspace_name: str) -> None:
     attributes = {
         "name": full_workspace_name,
         "resource-count": 0,
-        "updated-at": datetime.datetime.utcnow().isoformat() + 'Z',
+        "updated-at": f'{datetime.datetime.utcnow().isoformat()}Z',
     }
 
     if version := os.environ.get('TERRAFORM_VERSION'):
@@ -203,10 +203,11 @@ def delete_workspace(backend_config: BackendConfig, workspace_name: str) -> None
 
     full_workspace_name = get_full_workspace_name(backend_config, workspace_name)
 
-    if 'tags' in backend_config['workspaces']:
-        # Try to get the workspace to check that it has the correct tags
-        if get_workspace(backend_config, workspace_name) is None:
-            raise CloudException(f'No such workspace {workspace_name!r} that matches the backend configuration', None)
+    if (
+        'tags' in backend_config['workspaces']
+        and get_workspace(backend_config, workspace_name) is None
+    ):
+        raise CloudException(f'No such workspace {workspace_name!r} that matches the backend configuration', None)
 
     terraform_cloud = TerraformCloudApi(backend_config["hostname"], backend_config['token'])
 
@@ -242,8 +243,10 @@ def get_workspace(backend_config: BackendConfig, workspace_name: str) -> Optiona
 
     workspace = response.json()['data']
 
-    if 'tags' in backend_config['workspaces']:
-        if not all(tag in workspace['attributes']['tag-names'] for tag in backend_config['workspaces']['tags']):
-            return None
+    if 'tags' in backend_config['workspaces'] and any(
+        tag not in workspace['attributes']['tag-names']
+        for tag in backend_config['workspaces']['tags']
+    ):
+        return None
 
     return cast(Workspace, workspace)

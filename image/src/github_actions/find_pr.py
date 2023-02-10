@@ -52,7 +52,10 @@ def find_pr(github: GithubApi, actions_env: GithubEnv) -> PrUrl:
 
             if actions_env.get('GITHUB_REF_TYPE') == 'branch':
                 if match := re.match(r'refs/pull/(\d+)/', actions_env.get('GITHUB_REF', '')):
-                    return cast(PrUrl, f'{actions_env["GITHUB_API_URL"]}/repos/{actions_env["GITHUB_REPOSITORY"]}/pulls/{match.group(1)}')
+                    return cast(
+                        PrUrl,
+                        f'{actions_env["GITHUB_API_URL"]}/repos/{actions_env["GITHUB_REPOSITORY"]}/pulls/{match[1]}',
+                    )
 
             raise WorkflowException(f'Event payload is not available at the GITHUB_EVENT_PATH {actions_env["GITHUB_EVENT_PATH"]!r}. ' +
                                     f'This is required when run by {event_type} events. The environment has not been setup properly by the actions runner. ' +

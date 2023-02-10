@@ -27,10 +27,10 @@ class Version:
         if not match:
             raise ValueError(f'Not a valid version {version}')
 
-        self.major = int(match.group(1))
-        self.minor = int(match.group(2))
-        self.patch = int(match.group(3))
-        self.pre_release = match.group(4) or ''
+        self.major = int(match[1])
+        self.minor = int(match[2])
+        self.patch = int(match[3])
+        self.pre_release = match[4] or ''
 
     def __repr__(self) -> str:
         s = f'{self.major}.{self.minor}.{self.patch}'
@@ -44,10 +44,14 @@ class Version:
         return hash(self.__repr__())
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Version):
-            return NotImplemented
-
-        return self.major == other.major and self.minor == other.minor and self.patch == other.patch and self.pre_release == other.pre_release
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+            and self.pre_release == other.pre_release
+            if isinstance(other, Version)
+            else NotImplemented
+        )
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Version):
@@ -73,19 +77,22 @@ class Constraint:
     """A Terraform version constraint."""
 
     def __init__(self, constraint: str):
-        if match := re.match(r'([=!<>~]*)(.*)', constraint.replace(' ', '')):
-            self.operator = cast(ConstraintOperator, match.group(1) or '=')
-            constraint = match.group(2)
-        else:
+        if not (match := re.match(r'([=!<>~]*)(.*)', constraint.replace(' ', ''))):
             raise ValueError(f'Invalid version constraint {constraint}')
 
-        if match := re.match(r'(?P<major>\d+)(?:\.(?P<minor>\d+))?(?:\.(?P<patch>\d+))?(?:-(?P<pre_release>.*))?', constraint):
-            self.major = int(match.group('major'))
-            self.minor = int(match.group('minor')) if match.group('minor') else None
-            self.patch = int(match.group('patch')) if match.group('patch') else None
-            self.pre_release = match.group('pre_release') or ''
-        else:
+        self.operator = cast(ConstraintOperator, match[1] or '=')
+        constraint = match[2]
+        if not (
+            match := re.match(
+                r'(?P<major>\d+)(?:\.(?P<minor>\d+))?(?:\.(?P<patch>\d+))?(?:-(?P<pre_release>.*))?',
+                constraint,
+            )
+        ):
             raise ValueError(f'Invalid version constraint {constraint}')
+        self.major = int(match['major'])
+        self.minor = int(match['minor']) if match['minor'] else None
+        self.patch = int(match['patch']) if match['patch'] else None
+        self.pre_release = match['pre_release'] or ''
 
     def __repr__(self) -> str:
         s = f'{self.operator}{self.major}'
@@ -105,10 +112,15 @@ class Constraint:
         return hash(self.__repr__())
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, Constraint):
-            return NotImplemented
-
-        return self.major == other.major and self.minor == other.minor and self.patch == other.patch and self.pre_release == other.pre_release and self.operator == other.operator
+        return (
+            self.major == other.major
+            and self.minor == other.minor
+            and self.patch == other.patch
+            and self.pre_release == other.pre_release
+            and self.operator == other.operator
+            if isinstance(other, Constraint)
+            else NotImplemented
+        )
 
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Constraint):
@@ -151,10 +163,7 @@ class Constraint:
 
             if version.pre_release < self.pre_release:
                 return -1
-            if version.pre_release > self.pre_release:
-                return 1
-
-            return 0
+            return 1 if version.pre_release > self.pre_release else 0
 
         if self.operator == '=':
             return compare() == 0

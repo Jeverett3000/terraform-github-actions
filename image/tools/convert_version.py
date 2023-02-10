@@ -29,17 +29,16 @@ def convert_version(tf_output: str) -> Iterable[Output]:
     if not tf_version:
         raise ValueError('Unexpected terraform version output')
 
-    yield Output('terraform', tf_version.group(1))
+    yield Output('terraform', tf_version[1])
 
     for provider in re.finditer(r'provider[\. ](.+) v(.*)', tf_output):
 
         provider_name = provider.group(1)
         provider_version = provider.group(2)
 
-        if tf_version.group(1).startswith('0.13'):
-            source_address = re.match(r'(.*?)/(.*?)/(.*)', provider_name)
-            if source_address:
-                provider_name = source_address.group(3)
+        if tf_version[1].startswith('0.13'):
+            if source_address := re.match(r'(.*?)/(.*?)/(.*)', provider_name):
+                provider_name = source_address[3]
 
         yield Output(provider_name.strip(), provider_version.strip())
 
@@ -64,11 +63,11 @@ def convert_version_from_json(tf_output: Dict) -> Iterable[Union[str, Output]]:
     """
 
     yield f'Terraform v{tf_output["terraform_version"]}'
-    yield Output(f'terraform', tf_output["terraform_version"])
+    yield Output('terraform', tf_output["terraform_version"])
 
     for path, version in tf_output['provider_selections'].items():
         name_match = re.match(r'(.*?)/(.*?)/(.*)', path)
-        name = name_match.group(3) if name_match else path
+        name = name_match[3] if name_match else path
 
         yield f'+ provider {path} v{version}'
         yield Output(name, version)

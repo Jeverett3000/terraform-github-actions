@@ -57,9 +57,8 @@ def split_path(path: Optional[str]) -> List[str]:
 def read_attributes(att_string: str) -> Dict[str, str]:
     attributes = {}
     for line in att_string.splitlines():
-        match = re.match(r'^(.+?)=(.+)$', line)
-        if match:
-            attributes[match.group(1)] = match.group(2)
+        if match := re.match(r'^(.+?)=(.+)$', line):
+            attributes[match[1]] = match[2]
 
     return attributes
 
@@ -70,13 +69,12 @@ def write_attributes(attributes: Dict[str, str]) -> str:
 
 def read_credentials(creds: str) -> Iterable[Credential]:
     for line in creds.splitlines():
-        match = re.match(r'(.*?)(/.*?)?=(.*?):(.*)', line.strip())
-        if match:
+        if match := re.match(r'(.*?)(/.*?)?=(.*?):(.*)', line.strip()):
             yield Credential(
-                hostname=match.group(1).strip(),
-                path=split_path(match.group(2)),
-                username=match.group(3).strip(),
-                password=match.group(4).strip()
+                hostname=match[1].strip(),
+                path=split_path(match[2]),
+                username=match[3].strip(),
+                password=match[4].strip(),
             )
 
 def netrc(credentials: List[Credential]) -> str:

@@ -64,7 +64,7 @@ def _mask_backend_config(action_inputs: PlanPrInputs) -> Optional[str]:
         if not field:
             continue
 
-        if not any(bad_word in field for bad_word in bad_words):
+        if all(bad_word not in field for bad_word in bad_words):
             clean.append(field)
 
     return ','.join(clean)
@@ -134,11 +134,7 @@ def create_summary(plan: Plan) -> Optional[str]:
                 summary = summary.rstrip('.') + f', {to_move} to move.'
 
         if line.startswith('Changes to Outputs'):
-            if summary:
-                return summary + ' Changes to Outputs.'
-            else:
-                return 'Changes to Outputs.'
-
+            return f'{summary} Changes to Outputs.' if summary else 'Changes to Outputs.'
     return summary
 
 
@@ -291,10 +287,10 @@ def main() -> int:
         body = cast(Plan, sys.stdin.read().strip())
         description = format_classic_description(action_inputs)
 
-        only_if_exists = False
-        if action_inputs['INPUT_ADD_GITHUB_COMMENT'] == 'changes-only' and os.environ.get('TF_CHANGES', 'true') == 'false':
-            only_if_exists = True
-
+        only_if_exists = (
+            action_inputs['INPUT_ADD_GITHUB_COMMENT'] == 'changes-only'
+            and os.environ.get('TF_CHANGES', 'true') == 'false'
+        )
         if comment.comment_url is None and only_if_exists:
             debug('Comment doesn\'t already exist - not creating it')
             return 0

@@ -145,7 +145,7 @@ def get_archive(version: Version, cache_dirs: list[Path]) -> Tuple[Path, str]:
     Get the zip archive path for a terraform version
     """
 
-    assert len(cache_dirs) > 0
+    assert cache_dirs
 
     for cache_dir in cache_dirs:
 

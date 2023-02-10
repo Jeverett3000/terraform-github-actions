@@ -10,11 +10,11 @@ def format_credentials(input):
         if line.strip() == '':
             continue
 
-        match = re.search(r'(?P<host>.+?)\s*=\s*(?P<token>.+)', line.strip())
-
-        if match:
-            yield f'''credentials "{match.group('host')}" {{
-  token = "{match.group('token')}"
+        if match := re.search(
+            r'(?P<host>.+?)\s*=\s*(?P<token>.+)', line.strip()
+        ):
+            yield f'''credentials "{match['host']}" {{
+  token = "{match['token']}"
 }}
 '''
         else:

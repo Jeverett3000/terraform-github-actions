@@ -52,8 +52,8 @@ def loads(hcl: str) -> dict:
     if is_loadable(tmp_path):
         return hcl2.loads(hcl)
 
-    debug(f'Unable to load hcl')
-    raise ValueError(f'Unable to load hcl')
+    debug('Unable to load hcl')
+    raise ValueError('Unable to load hcl')
 
 
 if __name__ == '__main__':

@@ -28,12 +28,13 @@ def parse_tfenv(terraform_version_file: str, versions: Iterable[Version]) -> Ver
     if version.startswith('latest:'):
         version_regex = version.split(':', maxsplit=1)[1]
 
-        matched = [v for v in versions if re.search(version_regex, str(v))]
+        if matched := [
+            v for v in versions if re.search(version_regex, str(v))
+        ]:
+            return latest_version(matched)
 
-        if not matched:
+        else:
             raise Exception(f'No terraform versions match regex {version_regex}')
-
-        return latest_version(matched)
 
     return Version(version)
 

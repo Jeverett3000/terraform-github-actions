@@ -45,17 +45,18 @@ class TerraformComment:
         self._status = status.strip()
 
     def __eq__(self, other):
-        if not isinstance(other, TerraformComment):
-            return NotImplemented
-
         return (
-            self._issue_url == other._issue_url and
-            self._comment_url == other._comment_url and
-            self._headers == other._headers and
-            self._description == other._description and
-            self._summary == other._summary and
-            self._body == other._body and
-            self._status == other._status
+            (
+                self._issue_url == other._issue_url
+                and self._comment_url == other._comment_url
+                and self._headers == other._headers
+                and self._description == other._description
+                and self._summary == other._summary
+                and self._body == other._body
+                and self._status == other._status
+            )
+            if isinstance(other, TerraformComment)
+            else NotImplemented
         )
 
     def __ne__(self, other):
@@ -154,17 +155,18 @@ def _from_api_payload(comment: dict[str, Any]) -> Optional[TerraformComment]:
         re.VERBOSE | re.DOTALL
     )
 
-    if not match:
-        return None
-
-    return TerraformComment(
-        issue_url=comment['issue_url'],
-        comment_url=comment['url'],
-        headers=_parse_comment_header(match.group('headers')),
-        description=match.group('description').strip(),
-        summary=match.group('summary').strip(),
-        body=match.group('body').strip(),
-        status=match.group('status').strip()
+    return (
+        TerraformComment(
+            issue_url=comment['issue_url'],
+            comment_url=comment['url'],
+            headers=_parse_comment_header(match['headers']),
+            description=match['description'].strip(),
+            summary=match['summary'].strip(),
+            body=match['body'].strip(),
+            status=match['status'].strip(),
+        )
+        if match
+        else None
     )
 
 
@@ -238,7 +240,7 @@ def find_comment(github: GithubApi, issue_url: IssueUrl, username: str, headers:
 
     backup_comment = None
 
-    for comment_payload in github.paged_get(issue_url + '/comments'):
+    for comment_payload in github.paged_get(f'{issue_url}/comments'):
         if comment_payload['user']['login'] != username:
             continue
 
@@ -253,14 +255,11 @@ def find_comment(github: GithubApi, issue_url: IssueUrl, username: str, headers:
 
                 debug(f"Didn't match comment with {comment.headers=}")
 
+            elif comment.description == legacy_description and backup_comment is None:
+                debug(f'Found backup comment that matches legacy description {comment.description=}')
+                backup_comment = comment
             else:
-                # Match by description only
-
-                if comment.description == legacy_description and backup_comment is None:
-                    debug(f'Found backup comment that matches legacy description {comment.description=}')
-                    backup_comment = comment
-                else:
-                    debug(f"Didn't match comment with {comment.description=}")
+                debug(f"Didn't match comment with {comment.description=}")
 
     if backup_comment is not None:
         debug('Found comment matching legacy description')
@@ -313,7 +312,10 @@ def update_comment(
         response = github.patch(comment.comment_url, json={'body': _to_api_payload(new_comment)})
         response.raise_for_status()
     else:
-        response = github.post(comment.issue_url + '/comments', json={'body': _to_api_payload(new_comment)})
+        response = github.post(
+            f'{comment.issue_url}/comments',
+            json={'body': _to_api_payload(new_comment)},
+        )
         response.raise_for_status()
         new_comment.comment_url = response.json()['url']
 

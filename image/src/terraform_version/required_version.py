@@ -10,11 +10,10 @@ def get_required_version(module: TerraformModule, versions: Iterable[Version]) -
     if constraints is None:
         return None
 
-    valid_versions = list(apply_constraints(versions, constraints))
-    if not valid_versions:
+    if valid_versions := list(apply_constraints(versions, constraints)):
+        return latest_non_prerelease_version(valid_versions)
+    else:
         raise RuntimeError(f'No versions of terraform match the required_version constraints {constraints}\n')
-
-    return latest_non_prerelease_version(valid_versions)
 
 
 def try_get_required_version(module: TerraformModule, versions: Iterable[Version]) -> Optional[Version]:
