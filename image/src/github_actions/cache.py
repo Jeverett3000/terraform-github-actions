@@ -11,7 +11,7 @@ class ActionsCache:
         self._label = label or self._cache_dir
 
     def _get_path(self, key: str) -> Path:
-        """Get the full path for a cache key"""
+        """Compute the full path for a cache key"""
         return Path(self._cache_dir) / key
 
     def __setitem__(self, key, value):

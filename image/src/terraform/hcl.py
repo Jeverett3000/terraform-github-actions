@@ -9,12 +9,15 @@ from pathlib import Path
 from github_actions.debug import debug
 
 
-def try_load(path: Path) -> dict:
+def try_load(path: Path) -> dict | None:
+    """
+    Try to load HCL file, returning None if it cannot be loaded.
+    """
     try:
         with open(path) as f:
             return hcl2.load(f)
     except:
-        return {}
+        return None
 
 
 def load(path: Path) -> dict:
@@ -23,7 +26,7 @@ def load(path: Path) -> dict:
     This is more efficient as it avoids spawning a subprocess for validation.
     """
     result = try_load(path)
-    if result:
+    if result is not None:
         return result
 
     debug(f'Unable to load {path}')
