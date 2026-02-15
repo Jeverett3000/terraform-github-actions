@@ -16,7 +16,7 @@ def try_load(path: Path) -> dict | None:
     try:
         with open(path) as f:
             return hcl2.load(f)
-    except:
+    except Exception:
         return None
 
 
