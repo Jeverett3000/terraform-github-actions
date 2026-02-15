@@ -1,12 +1,17 @@
 import re
 
 
+# Pre-compile regex patterns at module level for performance
+_UNCHANGED_ATTRS_PATTERN = re.compile(r'\s+# \(\d+ unchanged attributes hidden\)')
+_PLAN_SUMMARY_PATTERN = re.compile(r'Plan: \d+ to add, \d+ to change, \d+ to destroy')
+
+
 def remove_unchanged_attributes(plan: str) -> str:
     """
     Remove unchanged attribute comments from plan text
     """
 
-    return '\n'.join(line for line in plan.splitlines() if not re.match(r'\s+# \(\d+ unchanged attributes hidden\)', line)).strip()
+    return '\n'.join(line for line in plan.splitlines() if not _UNCHANGED_ATTRS_PATTERN.match(line)).strip()
 
 def remove_warnings(plan: str) -> str:
     """
@@ -23,7 +28,7 @@ def remove_warnings(plan: str) -> str:
 
         plan_lines.append(line)
 
-        if re.match(r'Plan: \d+ to add, \d+ to change, \d+ to destroy', line):
+        if _PLAN_SUMMARY_PATTERN.match(line):
             plan_summary_reached = True
 
     return '\n'.join(plan_lines).strip()
