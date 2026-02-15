@@ -10,25 +10,30 @@ class ActionsCache:
         self._cache_dir = cache_dir
         self._label = label or self._cache_dir
 
+    def _get_path(self, key: str) -> Path:
+        """Compute the full path for a cache key"""
+        return Path(self._cache_dir) / key
+
     def __setitem__(self, key, value):
         if value is None:
             debug(f'Cache value for {key} should not be set to {value}')
             return
 
-        path = os.path.join(self._cache_dir, key)
+        path = self._get_path(key)
 
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(os.path.join(self._cache_dir, key), 'w') as f:
+        os.makedirs(path.parent, exist_ok=True)
+        with open(path, 'w') as f:
             f.write(value)
             debug(f'Wrote {key} to {self._label}')
 
     def __getitem__(self, key):
-        if os.path.isfile(os.path.join(self._cache_dir, key)):
-            with open(os.path.join(self._cache_dir, key)) as f:
+        path = self._get_path(key)
+        if path.is_file():
+            with open(path) as f:
                 debug(f'Read {key} from {self._label}')
                 return f.read()
 
         raise IndexError(key)
 
     def __contains__(self, key):
-        return os.path.isfile(os.path.join(self._cache_dir, key))
+        return self._get_path(key).is_file()

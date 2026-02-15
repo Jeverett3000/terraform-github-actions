@@ -4,3 +4,6 @@
 /venv/
 .terraform.lock.hcl
 .terraform-bin-dir/
+__pycache__/
+*.pyc
+*.pyo

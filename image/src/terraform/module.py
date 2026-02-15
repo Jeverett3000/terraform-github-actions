@@ -172,13 +172,13 @@ def get_remote_backend_config(
 
     def read_backend_files() -> None:
         """Read backend config files specified in env var"""
-        for file in backend_config_files.replace(',', '\n').splitlines():
+        for file in (f.strip() for f in backend_config_files.split(',') if f.strip()):
             for key, value in load_backend_config_file(Path(file)).items():
                 backend_config[key] = value[0] if isinstance(value, list) else value  # type: ignore
 
     def read_backend_vars() -> None:
         """Read backend config values specified in env var"""
-        for line in backend_config_vars.replace(',', '\n').splitlines():
+        for line in (l.strip() for l in backend_config_vars.split(',') if l.strip()):
             key, value = line.split('=', maxsplit=1)
             backend_config[key] = value  # type: ignore
 
